@@ -6,9 +6,7 @@
     "文翼 <wenzhixin2010@gmail.com>"
   ],
   "description": "A jQuery plugin to select multiple elements with checkboxes",
-  "main": [
-    "jquery.multiple.select.js"
-  ],
+  "main": "jquery.multiple.select.js",
   "license": "MIT",
   "dependencies": {
     "jquery": "1.7.x"
