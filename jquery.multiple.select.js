@@ -24,20 +24,20 @@
 
     function MultipleSelect($el, options) {
         var that = this,
-            name = $el.attr('name') || options.name || ''
+            name = $el.attr('name') || options.name || '';
 
         $el.parent().hide();
         var elWidth = $el.css("width");
 
         $el.parent().show();
         if (elWidth == "0px") {
-            elWidth = $el.outerWidth() + 20
+            elWidth = $el.outerWidth() + 20;
         }
 
         this.$el = $el.hide();
         this.options = options;
 
-        this.$parent = $('<div' + $.map(['class', 'title'], function (att) {
+        this.$parent = $('<div' + ['class', 'title'].map(function (att) {
                 var attValue = that.$el.attr(att) || '';
                 attValue = (att === 'class' ? ('ms-parent' + (attValue ? ' ' : '')) : '') + attValue;
                 return attValue ? (' ' + att + '="' + attValue + '"') : '';
@@ -84,6 +84,7 @@
         init: function () {
             var that = this,
                 html = [];
+
             if (this.options.filter) {
                 html.push(
                     '<div class="ms-search">',
@@ -91,7 +92,9 @@
                     '</div>'
                 );
             }
+
             html.push('<ul>');
+
             if (this.options.selectAll && !this.options.single) {
                 html.push(
                     '<li class="ms-select-all">',
@@ -102,14 +105,18 @@
                     '</li>'
                 );
             }
+
             $.each(this.$el.children(), function (i, elm) {
                 html.push(that.optionToHtml(i, elm));
             });
+
             html.push('<li class="ms-no-results">' + this.options.noMatchesFound + '</li>');
             html.push('</ul>');
+
             this.$drop.html(html.join(''));
 
-            this.$drop.find('ul').css('max-height', this.options.maxHeight + 'px');
+            this.$selectItemsContainer = this.$drop.find('ul').css('max-height', this.options.maxHeight + 'px');
+
             this.$drop.find('.multiple').css('width', this.options.multipleWidth + 'px');
 
             this.$searchInput = this.$drop.find('.ms-search input');
@@ -118,6 +125,7 @@
             this.$selectItems = this.$drop.find('input[' + this.selectItemName + ']:enabled');
             this.$disableItems = this.$drop.find('input[' + this.selectItemName + ']:disabled');
             this.$noResults = this.$drop.find('.ms-no-results');
+
             this.events();
             this.updateSelectAll(true);
             this.update(true);
@@ -213,6 +221,7 @@
                     e.stopPropagation(); // Causes lost focus otherwise
                 });
             }
+
             this.$choice.off(eventName('click')).on(eventName('click'), toggleOpen)
                 .off(eventName('focus')).on(eventName('focus'), this.options.onFocus)
                 .off(eventName('blur')).on(eventName('blur'), this.options.onBlur);
@@ -221,9 +230,10 @@
             this.$parent.off(eventName('keydown')).on(eventName('keydown'), function (e) {
                 switch (e.which) {
                     case KEY.ESC: // esc key
+                        e.stopPropagation();
+
                         that.close();
                         that.$choice.focus();
-                        e.stopPropagation();
                         break;
                     case KEY.DOWN:
                     case KEY.UP:
@@ -235,6 +245,7 @@
                         break;
                 }
             });
+
             this.$searchInput.off(eventName('keydown')).on(eventName('keydown'), function (e) {
                 if (e.keyCode === KEY.TAB && e.shiftKey) { // Ensure shift-tab causes lost focus from filter as with clicking away
                     that.close();
@@ -251,6 +262,7 @@
                 }
                 that.filter();
             });
+
             this.$selectAll.off(eventName('click')).on(eventName('click'), function () {
                 var checked = $(this).prop('checked'),
                     $items = that.$selectItems.filter(':visible');
@@ -263,6 +275,7 @@
                     that.update();
                 }
             });
+
             this.$selectGroups.off(eventName('click')).on(eventName('click'), function () {
                 var group = $(this).parent().attr('data-group'),
                     $items = that.$selectItems.filter(':visible'),
@@ -277,6 +290,7 @@
                     children: $children.get()
                 });
             });
+
             this.$selectItems.off(eventName('click')).on(eventName('click'), function () {
                 var $this = $(this);
                 that.updateSelectAll();
@@ -300,11 +314,11 @@
             var fisrtSelector = ':visible' + (toDown ? ':first' : ':last');
 
             if (!highlightedItem) {
-                highlightedItem = this.$drop.find('input').filter(fisrtSelector);
+                highlightedItem = this.$selectItemsContainer.find('input').filter(fisrtSelector);
             } else {
                 highlightedItem = highlightedItem.next(toDown);
                 if (!highlightedItem || !highlightedItem.length){
-                    highlightedItem = this.$drop.find('input').filter(fisrtSelector);
+                    highlightedItem = this.$selectItemsContainer.find('input').filter(fisrtSelector);
                 }
             }
 
