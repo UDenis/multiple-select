@@ -9,6 +9,8 @@
 
     'use strict';
 
+    var privateEventChanel = $({});
+
     var KEY = {
         ESC: 27,
         TAB: 9,
@@ -21,6 +23,10 @@
     function eventName(name) {
         return name + '.multipleselect';
     }
+
+    $('body').click(function (e) {
+        privateEventChanel.trigger(eventName('click.body'), e)
+    });
 
     function MultipleSelect($el, options) {
         var that = this,
@@ -59,7 +65,13 @@
         //this.$parent.css('width', options.width || elWidth);
 
         if (!this.options.keepOpen) {
-            $('body').click(function (e) {
+            privateEventChanel.on(eventName('click.body'), onBodyClick);
+
+            this.$el.one(eventName('destroy'), function () {
+                privateEventChanel.off(eventName('click.body'), onBodyClick);
+            });
+
+            function onBodyClick(event, e) {
                 if ($(e.target)[0] === that.$choice[0] ||
                     $(e.target).parents('.ms-choice')[0] === that.$choice[0]) {
                     return;
@@ -70,7 +82,7 @@
                     that.options.isOpen) {
                     that.close();
                 }
-            });
+            }
         }
 
         this.selectAllName = 'name="selectAll' + name + '"';
@@ -135,30 +147,49 @@
             }
         },
 
-        optionToHtml: function (i, elm, group, groupDisabled) {
-            var that = this,
-                $elm = $(elm),
-                html = [],
-                multiple = this.options.multiple,
-                optAttributesToCopy = ['class', 'title'],
-                clss = $.map(optAttributesToCopy, function (att, i) {
-                    var isMultiple = att === 'class' && multiple;
-                    var attValue = $elm.attr(att) || '';
-                    return (isMultiple || attValue) ?
-                        (' ' + att + '="' + (isMultiple ? ('multiple' + (attValue ? ' ' : '')) : '') + attValue + '"') :
-                        '';
-                }).join(''),
-                disabled,
-                type = this.options.single ? 'radio' : 'checkbox';
+        destroy: function () {
+            this.close();
+            this.$el.trigger(eventName('destroy'));
+            this.parent.off('multipleselect');
+            var that = this;
+            Object.keys(this).forEach(function (key) {
+                that[key] = null;
+            });
+        },
 
-            if ($elm.is('option')) {
-                var value = $elm.val(),
-                    text = that.options.textTemplate($elm),
-                    selected = (that.$el.attr('multiple') != undefined) ? $elm.prop('selected') : ($elm.attr('selected') == 'selected'),
-                    style = this.options.styler(value) ? ' style="' + this.options.styler(value) + '"' : '';
+        /**
+         * Add new option
+         * @param {object{value,text,selected, disabled, class} } option
+         * @param {object{name, disabled}} group
+         */
+        addOption: function (option, group, onlyGenerate) {
+            group = group || {};
 
-                disabled = groupDisabled || $elm.prop('disabled');
-                if ((this.options.blockSeparator > "") && (this.options.blockSeparator == $elm.val())) {
+            if (!option) {
+                return;
+            }
+
+            var html = [],
+                that = this;
+
+            if (Array.isArray(option)) {
+                html = html.concat(option.map(function (opt) {
+                    return that.addOption(opt, group, true);
+                }));
+            } else {
+
+                var value = option.value || option.name || option.text,
+                    text = option.text || value,
+                    selected = option.selected,
+                    style = this.options.styler(value) ? ' style="' + this.options.styler(value) + '"' : '',
+                    clss = option.class || '',
+                    groupDisabled = group ? group.disabled : false,
+                    disabled = groupDisabled || option.disabled,
+                    type = this.options.single ? 'radio' : 'checkbox',
+                    multiple = this.options.multiple;
+
+
+                if ((this.options.blockSeparator > "") && (this.options.blockSeparator == value)) {
                     html.push(
                         '<li' + clss + style + '>',
                         '<label class="' + this.options.blockSeparator + (disabled ? 'disabled' : '') + '">',
@@ -173,31 +204,117 @@
                         '<input type="' + type + '" ' + this.selectItemName + ' value="' + value + '"' +
                         (selected ? ' checked="checked"' : '') +
                         (disabled ? ' disabled="disabled"' : '') +
-                        (group ? ' data-group="' + group + '"' : '') +
+                        (group.name ? ' data-group="' + group.name + '"' : '') +
+                        ' data-option=\'' + JSON.stringify(option) + '\'',
                         '/> ',
                         text,
                         '</label>',
                         '</li>'
                     );
                 }
-            } else if (!group && $elm.is('optgroup')) {
-                var _group = 'group_' + i,
-                    label = $elm.attr('label');
+            }
 
-                disabled = $elm.prop('disabled');
-                html.push(
-                    '<li class="group">',
-                    '<label class="optgroup' + (disabled ? ' disabled' : '') + '" data-group="' + _group + '">',
-                    (this.options.hideOptgroupCheckboxes ? '' : '<input type="checkbox" ' + this.selectGroupName +
-                    (disabled ? ' disabled="disabled"' : '') + ' /> '),
-                    label,
-                    '</label>',
-                    '</li>');
+            if (onlyGenerate) {
+                return html.join('');
+            } else {
+                this.$selectItemsContainer.append(html);
+            }
+        },
+
+        /**
+         * Add new group for options
+         * @param {object{name, label,disabled}}group
+         */
+        addGroup: function (group, onlyGenerate) {
+            var _group = group.name,
+                label = group.label,
+                disabled = group.disabled,
+                html = [];
+
+            html.push(
+                '<li class="group">',
+                '<label class="optgroup' + (disabled ? ' disabled' : '') + '" data-group="' + _group + '">',
+                (this.options.hideOptgroupCheckboxes ? '' : '<input type="checkbox" ' + this.selectGroupName +
+                (disabled ? ' disabled="disabled"' : '') + ' /> '),
+                label,
+                '</label>',
+                '</li>');
+            if (onlyGenerate) {
+                return html.join('');
+            } else {
+                this.$selectItemsContainer.append(html);
+            }
+
+        },
+
+        optionToHtml: function (i, elm, group, groupDisabled) {
+            var that = this,
+                $elm = $(elm),
+                html = [],
+                multiple = this.options.multiple;
+
+            if ($elm.is('option')) {
+                html.push(this.addOption(getOptionParams(i, elm, group, groupDisabled), {
+                    name: group,
+                    disabled: groupDisabled
+                }, true));
+            } else if (!group && $elm.is('optgroup')) {
+                var group = getGroupParams(i, elm, group, groupDisabled);
+                html.push(this.addGroup(group), true);
+
                 $.each($elm.children(), function (i, elm) {
-                    html.push(that.optionToHtml(i, elm, _group, disabled));
+                    html.push(that.optionToHtml(i, elm, group.name, group.disabled));
                 });
             }
             return html.join('');
+
+            function getOptionParams(i, elm, group, groupDisabled) {
+                var $elm = $(elm),
+                    value = $elm.val(),
+                    text = that.options.textTemplate($elm),
+                    selected = (that.$el.attr('multiple') != undefined) ? $elm.prop('selected') : ($elm.attr('selected') == 'selected'),
+                    disabled = $elm.prop('disabled');
+
+                var clss = $.map(['class', 'title'], function (att, i) {
+                    var isMultiple = att === 'class' && multiple;
+                    var attValue = $elm.attr(att) || '';
+                    return (isMultiple || attValue) ?
+                        (' ' + att + '="' + (isMultiple ? ('multiple' + (attValue ? ' ' : '')) : '') + attValue + '"') :
+                        '';
+                }).join('');
+
+                return {
+                    value: value,
+                    text: text,
+                    selected: selected,
+                    disabled: disabled,
+                    class: clss
+                };
+            }
+
+            function getGroupParams(i, elm, group, groupDisabled) {
+                var $elm = $(elm),
+                    _group = 'group_' + i,
+                    label = $elm.attr('label'),
+                    disabled = $elm.prop('disabled');
+
+                return {
+                    label: label,
+                    name: _group,
+                    disabled: disabled
+                };
+            }
+        },
+
+        onEvent: function ($element, event) {
+            var event = eventName(event);
+            $element
+                .off(event)
+                .on.apply($element, [event].concat(Array.prototype.slice.call(arguments, 2)));
+
+            this.$el.one(eventName('destroy'), function () {
+                $element.off(event);
+            });
         },
 
         events: function () {
@@ -210,7 +327,7 @@
 
             var label = this.$el.parent().closest('label')[0] || $('label[for=' + this.$el.attr('id') + ']')[0];
             if (label) {
-                $(label).off(eventName('click')).on(eventName('click'), function (e) {
+                this.onEvent($(label), 'click', function (e) {
                     if (e.target.nodeName.toLowerCase() !== 'label' || e.target !== this) {
                         return;
                     }
@@ -222,16 +339,15 @@
                 });
             }
 
-            this.$choice.off(eventName('click')).on(eventName('click'), toggleOpen)
-                .off(eventName('focus')).on(eventName('focus'), this.options.onFocus)
-                .off(eventName('blur')).on(eventName('blur'), this.options.onBlur);
+            this.onEvent(this.$choice, 'click', toggleOpen);
+            this.onEvent(this.$choice, 'focus', this.options.onFocus);
+            this.onEvent(this.$choice, 'blur', this.options.onBlur);
 
 
-            this.$parent.off(eventName('keydown')).on(eventName('keydown'), function (e) {
+            this.onEvent(this.$parent, 'keyup', function (e) {
                 switch (e.which) {
                     case KEY.ESC: // esc key
                         e.stopPropagation();
-
                         that.close();
                         that.$choice.focus();
                         break;
@@ -246,11 +362,13 @@
                 }
             });
 
-            this.$searchInput.off(eventName('keydown')).on(eventName('keydown'), function (e) {
+            this.onEvent(this.$searchInput, 'keydown', function (e) {
                 if (e.keyCode === KEY.TAB && e.shiftKey) { // Ensure shift-tab causes lost focus from filter as with clicking away
                     that.close();
                 }
-            }).off(eventName('keyup')).on(eventName('keyup'), function (e) {
+            });
+
+            this.onEvent(this.$searchInput, 'keyup', function (e) {
                 if (that.options.filterAcceptOnEnter &&
                     (e.which === KEY.ENTER || e.which == KEY.SPACE) && // enter or space
                     that.$searchInput.val() // Avoid selecting/deselecting if no choices made
@@ -263,7 +381,7 @@
                 that.filter();
             });
 
-            this.$selectAll.off(eventName('click')).on(eventName('click'), function () {
+            this.onEvent(this.$selectAll, 'click', function () {
                 var checked = $(this).prop('checked'),
                     $items = that.$selectItems.filter(':visible');
                 if ($items.length === that.$selectItems.length) {
@@ -276,7 +394,7 @@
                 }
             });
 
-            this.$selectGroups.off(eventName('click')).on(eventName('click'), function () {
+            this.onEvent(this.$selectGroups, 'click', function () {
                 var group = $(this).parent().attr('data-group'),
                     $items = that.$selectItems.filter(':visible'),
                     $children = $items.filter('[data-group="' + group + '"]'),
@@ -291,22 +409,57 @@
                 });
             });
 
-            this.$selectItems.off(eventName('click')).on(eventName('click'), function () {
+            this.$parent.on(eventName('click'), 'input[' + this.selectItemName + ']:enabled', function () {
                 var $this = $(this);
+                itemSelected($this);
+                if (that.options.single && that.options.isOpen && !that.options.keepOpen) {
+                    that.close();
+                    that.$choice.focus();
+                }
+            });
+
+            this.onEvent(this.$selectItems, 'keydown', function (e) {
+                if (e.which === KEY.ENTER) {
+                    var $this = $(this);
+                    $this.prop('checked', true);
+                    itemSelected($this);
+                    that.$choice.focus();
+                }
+            });
+
+
+            privateEventChanel.on(eventName('opened'), opened);
+
+            privateEventChanel.on(eventName('click.body'), onBodyClick);
+
+            this.$el.one(eventName('destroy'), function () {
+                privateEventChanel.off(eventName('opened'), opened);
+                privateEventChanel.off(eventName('click.body'), onBodyClick);
+            });
+
+            function opened(e, multipleSelect) {
+                if (that.options.isOpen && that != multipleSelect) {
+                    that.close();
+                }
+            }
+
+            function onBodyClick(event, e) {
+                if (that.options.isOpen && !that.$parent.has(e.target).length) {
+                    that.close();
+                }
+            }
+
+            function itemSelected($this) {
                 that.updateSelectAll();
                 that.update();
                 that.updateOptGroupSelect();
-                that.setHighlightItem($this);
+                that.setHighlightItem($this.closest('li'));
                 that.options.onClick({
                     label: $this.parent().text(),
                     value: $this.val(),
                     checked: $this.prop('checked')
                 });
-
-                if (that.options.single && that.options.isOpen && !that.options.keepOpen) {
-                    that.close();
-                }
-            });
+            }
         },
 
         highlightItem: function (toDown) {
@@ -314,30 +467,31 @@
             var fisrtSelector = ':visible' + (toDown ? ':first' : ':last');
 
             if (!highlightedItem) {
-                highlightedItem = this.$selectItemsContainer.find('input').filter(fisrtSelector);
+                highlightedItem = this.$selectItemsContainer.find('li').filter(fisrtSelector);
             } else {
                 highlightedItem = highlightedItem.next(toDown);
-                if (!highlightedItem || !highlightedItem.length){
-                    highlightedItem = this.$selectItemsContainer.find('input').filter(fisrtSelector);
+                if (!highlightedItem || !highlightedItem.length) {
+                    highlightedItem = this.$selectItemsContainer.find('li').filter(fisrtSelector);
                 }
             }
 
             this.setHighlightItem(highlightedItem);
         },
 
-        setHighlightItem: function(highlightedItem){
+        setHighlightItem: function (highlightedItem) {
             this.resetHighlightItem();
 
             var highlightedObj = {
-                item:highlightedItem,
-                reset:function(){
-                    highlightedItem.closest('li').removeClass('highlight');
+                item: highlightedItem,
+                reset: function () {
+                    highlightedItem.removeClass('highlight');
+
                 },
-                init: function(){
-                    highlightedItem.closest('li').addClass('highlight');
+                init: function () {
+                    highlightedItem.addClass('highlight');
                 },
-                next:function(toDown){
-                    return highlightedItem.closest('li')[toDown ? 'next' : 'prev' ]().find('input')
+                next: function (toDown) {
+                    return highlightedItem[toDown ? 'next' : 'prev'](":visible");
                 }
             };
 
@@ -345,14 +499,17 @@
             this.highlightedItem = highlightedObj;
         },
 
-        resetHighlightItem:function(){
-            if (this.highlightedItem){
+        resetHighlightItem: function () {
+            if (this.highlightedItem) {
                 this.highlightedItem.reset();
                 this.highlightedItem = null;
             }
         },
 
         open: function () {
+
+            this.changeAfterOpen = false;
+
             if (this.$choice.hasClass('disabled')) {
                 return;
             }
@@ -381,6 +538,9 @@
                 this.filter();
             }
             this.options.onOpen();
+
+            privateEventChanel.trigger(eventName('opened'), this);
+
         },
 
         close: function () {
@@ -396,9 +556,14 @@
             }
             this.options.onClose();
             this.resetHighlightItem();
+            if (this.changeAfterOpen) {
+                this.$el.trigger(eventName('change'), {items: this.getSelects('obj')});
+            }
+            this.changeAfterOpen = false;
         },
 
         update: function (isInit) {
+
             var selects = this.getSelects(),
                 $span = this.$choice.find('>span');
 
@@ -436,7 +601,11 @@
 
             // trigger <select> change event
             if (!isInit) {
-                this.$el.trigger('change');
+                if (this.options.single) {
+                    this.$el.trigger(eventName('change'), {items: this.getSelects('obj')});
+                } else {
+                    this.changeAfterOpen = true;
+                }
             }
         },
 
@@ -466,10 +635,14 @@
         getSelects: function (type) {
             var that = this,
                 texts = [],
-                values = [];
+                values = [],
+                options = [];
+
             this.$drop.find('input[' + this.selectItemName + ']:checked').each(function () {
-                texts.push($(this).parents('li').first().text());
-                values.push($(this).val());
+                var $this = $(this);
+                texts.push($this.parents('li').first().text());
+                values.push($this.val());
+                options.push($this.data('option'));
             });
 
             if (type === 'text' && this.$selectGroups.length) {
@@ -498,7 +671,7 @@
                     texts.push(html.join(''));
                 });
             }
-            return type === 'text' ? texts : values;
+            return type === 'text' ? texts : type === 'obj' ? options : values;
         },
 
         setSelects: function (values) {
@@ -594,7 +767,8 @@
                 'enable', 'disable',
                 'checkAll', 'uncheckAll',
                 'focus', 'blur',
-                'refresh', 'close'
+                'refresh', 'close',
+                'destroy', 'addOption'
             ];
 
         this.each(function () {
