@@ -24,6 +24,26 @@
         return name + '.multipleselect';
     }
 
+    function normalizeOption(opt){
+        if (Array.isArray(opt)){
+            return opt.filter(function(o){return !!o}).map(normalize);
+        } else {
+            return normalize(opt);
+        }
+
+        function normalize(opt){
+            var value = opt.id || opt.value || opt.name || opt.text;
+            return {
+                id: value,
+                text: opt.text || opt.name || value
+            }
+        }
+    }
+
+    function arrayify(val){
+        return Array.isArray ? val : [val];
+    }
+
     $('body').click(function (e) {
         privateEventChanel.trigger(eventName('click.body'), e)
     });
@@ -49,7 +69,7 @@
                 return attValue ? (' ' + att + '="' + attValue + '"') : '';
             }).join('') + ' />');
 
-        this.$choice = $('<button type="button" class="ms-choice"><span class="placeholder">' +
+        this.$choice = $('<button type="button" class="ms-choice" name="'+ name +'"><span class="placeholder">' +
             options.placeholder + '</span><div></div></button>');
 
         this.$drop = $('<div class="ms-drop ' + options.position + '"></div>');
@@ -92,6 +112,14 @@
 
     MultipleSelect.prototype = {
         constructor: MultipleSelect,
+
+        visible: function(val){
+            if (arguments.length === 0 || val === undefined){
+                return this.$parent.is(':visible');
+            } else {
+                this.$parent[vav ? 'show' : 'hide']();
+            }
+        },
 
         init: function () {
             var that = this,
@@ -150,7 +178,7 @@
         destroy: function () {
             this.close();
             this.$el.trigger(eventName('destroy'));
-            this.parent.off('multipleselect');
+            this.$parent.off('multipleselect');
             var that = this;
             Object.keys(this).forEach(function (key) {
                 that[key] = null;
@@ -177,9 +205,10 @@
                     return that.addOption(opt, group, true);
                 }));
             } else {
+                option = normalizeOption(option);
 
-                var value = option.value || option.name || option.text,
-                    text = option.text || value,
+                var value = option.id,
+                    text = option.text,
                     selected = option.selected,
                     style = this.options.styler(value) ? ' style="' + this.options.styler(value) + '"' : '',
                     clss = option.class || '',
@@ -218,6 +247,8 @@
                 return html.join('');
             } else {
                 this.$selectItemsContainer.append(html);
+                this.$selectItems = this.$drop.find('input[' + this.selectItemName + ']:enabled');
+                this.$disableItems = this.$drop.find('input[' + this.selectItemName + ']:disabled');
             }
         },
 
@@ -560,6 +591,7 @@
                 this.$el.trigger(eventName('change'), {items: this.getSelects('obj')});
             }
             this.changeAfterOpen = false;
+            this.$choice.focus();
         },
 
         update: function (isInit) {
@@ -675,10 +707,16 @@
         },
 
         setSelects: function (values) {
+            if (!values){
+                return;
+            }
+
+            values = normalizeOption(arrayify(values));
+
             var that = this;
             this.$selectItems.prop('checked', false);
-            $.each(values, function (i, value) {
-                that.$selectItems.filter('[value="' + value + '"]').prop('checked', true);
+            values.forEach(function (value, i) {
+                that.$selectItems.filter('[value="' + value.id + '"]').prop('checked', true);
             });
             this.$selectAll.prop('checked', this.$selectItems.length ===
                 this.$selectItems.filter(':checked').length);
@@ -768,7 +806,8 @@
                 'checkAll', 'uncheckAll',
                 'focus', 'blur',
                 'refresh', 'close',
-                'destroy', 'addOption'
+                'destroy', 'addOption',
+                'visible'
             ];
 
         this.each(function () {
