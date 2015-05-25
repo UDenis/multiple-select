@@ -35,7 +35,7 @@
             var value = opt.id || opt.value || opt.name || opt.text;
             return {
                 id: value,
-                text: opt.text || opt.name || value
+                name: opt.text || opt.name || value
             }
         }
     }
@@ -90,24 +90,24 @@
             this.$el.one(eventName('destroy'), function () {
                 privateEventChanel.off(eventName('click.body'), onBodyClick);
             });
-
-            function onBodyClick(event, e) {
-                if ($(e.target)[0] === that.$choice[0] ||
-                    $(e.target).parents('.ms-choice')[0] === that.$choice[0]) {
-                    return;
-                }
-                if (e.target.tagName.toUpperCase() === "INPUT" &&
-                    ($(e.target)[0] === that.$drop[0] ||
-                    $(e.target).parents('.ms-drop')[0] !== that.$drop[0]) &&
-                    that.options.isOpen) {
-                    that.close();
-                }
-            }
         }
 
         this.selectAllName = 'name="selectAll' + name + '"';
         this.selectGroupName = 'name="selectGroup' + name + '"';
         this.selectItemName = 'name="selectItem' + name + '"';
+
+        function onBodyClick(event, e) {
+            if ($(e.target)[0] === that.$choice[0] ||
+                $(e.target).parents('.ms-choice')[0] === that.$choice[0]) {
+                return;
+            }
+            if (e.target.tagName.toUpperCase() === "INPUT" &&
+                ($(e.target)[0] === that.$drop[0] ||
+                $(e.target).parents('.ms-drop')[0] !== that.$drop[0]) &&
+                that.options.isOpen) {
+                that.close();
+            }
+        }
     }
 
     MultipleSelect.prototype = {
@@ -208,7 +208,7 @@
                 option = normalizeOption(option);
 
                 var value = option.id,
-                    text = option.text,
+                    text = option.name,
                     selected = option.selected,
                     style = this.options.styler(value) ? ' style="' + this.options.styler(value) + '"' : '',
                     clss = option.class || '',
@@ -520,6 +520,7 @@
                 },
                 init: function () {
                     highlightedItem.addClass('highlight');
+                    highlightedItem.find('input').focus();
                 },
                 next: function (toDown) {
                     return highlightedItem[toDown ? 'next' : 'prev'](":visible");
@@ -636,6 +637,7 @@
                 if (this.options.single) {
                     this.$el.trigger(eventName('change'), {items: this.getSelects('obj')});
                 } else {
+                    this.$el.trigger(eventName('select'), {items: this.getSelects('obj')});
                     this.changeAfterOpen = true;
                 }
             }
