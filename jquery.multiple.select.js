@@ -720,7 +720,7 @@
             });
             this.$selectAll.prop('checked', this.$selectItems.length ===
                 this.$selectItems.filter(':checked').length);
-            this.update();
+            this.update(true);
         },
 
         enable: function () {
