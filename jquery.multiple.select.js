@@ -41,7 +41,7 @@
     }
 
     function arrayify(val){
-        return Array.isArray ? val : [val];
+        return Array.isArray(val) ? val : [val];
     }
 
     $('body').click(function (e) {
