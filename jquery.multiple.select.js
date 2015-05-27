@@ -24,14 +24,16 @@
         return name + '.multipleselect';
     }
 
-    function normalizeOption(opt){
-        if (Array.isArray(opt)){
-            return opt.filter(function(o){return !!o}).map(normalize);
+    function normalizeOption(opt) {
+        if (Array.isArray(opt)) {
+            return opt.filter(function (o) {
+                return !!o
+            }).map(normalize);
         } else {
             return normalize(opt);
         }
 
-        function normalize(opt){
+        function normalize(opt) {
             var value = opt.id || opt.value || opt.name || opt.text;
             return {
                 id: value,
@@ -40,7 +42,7 @@
         }
     }
 
-    function arrayify(val){
+    function arrayify(val) {
         return Array.isArray(val) ? val : [val];
     }
 
@@ -69,7 +71,7 @@
                 return attValue ? (' ' + att + '="' + attValue + '"') : '';
             }).join('') + ' />');
 
-        this.$choice = $('<button type="button" class="ms-choice" name="'+ name +'"><span class="placeholder">' +
+        this.$choice = $('<button type="button" class="ms-choice" name="' + name + '"><span class="placeholder">' +
             options.placeholder + '</span><div></div></button>');
 
         this.$drop = $('<div class="ms-drop ' + options.position + '"></div>');
@@ -113,8 +115,8 @@
     MultipleSelect.prototype = {
         constructor: MultipleSelect,
 
-        visible: function(val){
-            if (arguments.length === 0 || val === undefined){
+        visible: function (val) {
+            if (arguments.length === 0 || val === undefined) {
                 return this.$parent.is(':visible');
             } else {
                 this.$parent[vav ? 'show' : 'hide']();
@@ -215,12 +217,13 @@
                     groupDisabled = group ? group.disabled : false,
                     disabled = groupDisabled || option.disabled,
                     type = this.options.single ? 'radio' : 'checkbox',
+                    tabIndex = ' tabindex="-1" ',
                     multiple = this.options.multiple;
 
 
                 if ((this.options.blockSeparator > "") && (this.options.blockSeparator == value)) {
                     html.push(
-                        '<li' + clss + style + '>',
+                        '<li' + clss + style + tabIndex + '>',
                         '<label class="' + this.options.blockSeparator + (disabled ? 'disabled' : '') + '">',
                         text,
                         '</label>',
@@ -228,7 +231,7 @@
                     );
                 } else {
                     html.push(
-                        '<li' + clss + style + '>',
+                        '<li' + clss + style + tabIndex + ' >',
                         '<label' + (disabled ? ' class="disabled"' : '') + '>',
                         '<input type="' + type + '" ' + this.selectItemName + ' value="' + value + '"' +
                         (selected ? ' checked="checked"' : '') +
@@ -390,6 +393,23 @@
                             that.highlightItem(e.which == KEY.DOWN);
                         }
                         break;
+                    case KEY.SPACE:
+                        e.stopPropagation();
+                        e.preventDefault();
+                        if (that.highlightedItem) {
+                            that.highlightedItem.select();
+                            itemSelected(that.highlightedItem.input);
+                            if (that.options.single && that.options.isOpen && !that.options.keepOpen) {
+                                that.close();
+                                that.$choice.focus();
+                            }
+                        }
+                        break;
+                    case KEY.ENTER:
+                        if (that.options.isOpen) {
+                            that.close();
+                            that.$choice.focus();
+                        }
                 }
             });
 
@@ -440,6 +460,9 @@
                 });
             });
 
+            /**
+             * Subscribe to select/click item event
+             */
             this.$parent.on(eventName('click'), 'input[' + this.selectItemName + ']:enabled', function () {
                 var $this = $(this);
                 itemSelected($this);
@@ -448,6 +471,7 @@
                     that.$choice.focus();
                 }
             });
+
 
             this.onEvent(this.$selectItems, 'keydown', function (e) {
                 if (e.which === KEY.ENTER) {
@@ -514,13 +538,17 @@
 
             var highlightedObj = {
                 item: highlightedItem,
+                input: highlightedItem.find('input'),
                 reset: function () {
                     highlightedItem.removeClass('highlight');
 
                 },
                 init: function () {
                     highlightedItem.addClass('highlight');
-                    highlightedItem.find('input').focus();
+                    highlightedItem.focus();
+                },
+                select: function () {
+                    highlightedObj.input.prop('checked', !highlightedObj.input.prop('checked'));
                 },
                 next: function (toDown) {
                     return highlightedItem[toDown ? 'next' : 'prev'](":visible");
@@ -709,7 +737,7 @@
         },
 
         setSelects: function (values) {
-            if (!values){
+            if (!values) {
                 return;
             }
 
