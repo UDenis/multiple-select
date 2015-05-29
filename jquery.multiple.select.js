@@ -737,7 +737,8 @@
         },
 
         setSelects: function (values) {
-            if (!values) {
+            if (!values || !values.length) {
+                this.clearSelection();
                 return;
             }
 
@@ -770,11 +771,15 @@
         },
 
         uncheckAll: function () {
+            this.clearSelection();
+            this.options.onUncheckAll();
+        },
+
+        clearSelection: function () {
             this.$selectItems.prop('checked', false);
             this.$selectGroups.prop('checked', false);
             this.$selectAll.prop('checked', false);
             this.update();
-            this.options.onUncheckAll();
         },
 
         focus: function () {
@@ -875,8 +880,8 @@
         selectAllText: 'Выбрать все',
         selectAllDelimiter: ['[', ']'],
         allSelected: 'Выбраны все',
-        minimumCountSelected: 3,
-        countSelected: '# of % selected',
+        minimumCountSelected: 5,
+        countSelected: 'выбрано # из %',
         noMatchesFound: 'No matches found',
         multiple: false,
         multipleWidth: 80,
