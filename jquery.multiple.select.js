@@ -738,7 +738,7 @@
 
         setSelects: function (values) {
             if (!values || !values.length) {
-                this.clearSelection();
+                this.clearSelection(true);
                 return;
             }
 
@@ -771,15 +771,15 @@
         },
 
         uncheckAll: function () {
-            this.clearSelection();
+            this.clearSelection(false);
             this.options.onUncheckAll();
         },
 
-        clearSelection: function () {
+        clearSelection: function (isInit) {
             this.$selectItems.prop('checked', false);
             this.$selectGroups.prop('checked', false);
             this.$selectAll.prop('checked', false);
-            this.update();
+            this.update(isInit);
         },
 
         focus: function () {
