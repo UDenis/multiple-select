@@ -255,6 +255,12 @@
             }
         },
 
+        clearOptions: function(){
+            this.$selectItemsContainer.html('');
+            this.$selectItems = this.$drop.find('input[' + this.selectItemName + ']:enabled');
+            this.$disableItems = this.$drop.find('input[' + this.selectItemName + ']:disabled');
+        },
+
         /**
          * Add new group for options
          * @param {object{name, label,disabled}}group
