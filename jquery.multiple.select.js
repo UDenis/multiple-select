@@ -737,12 +737,17 @@
         },
 
         setSelects: function (values) {
-            if (!values || !values.length) {
+            if (!values) {
                 this.clearSelection(true);
                 return;
             }
 
             values = normalizeOption(arrayify(values));
+
+            if (!values.length){
+                this.clearSelection(true);
+                return;
+            }
 
             var that = this;
             this.$selectItems.prop('checked', false);
