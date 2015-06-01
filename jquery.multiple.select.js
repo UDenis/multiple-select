@@ -232,13 +232,15 @@
                 } else {
                     html.push(
                         '<li' + clss + style + tabIndex + ' >',
-                        '<label' + (disabled ? ' class="disabled"' : '') + '>',
-                        '<input type="' + type + '" ' + this.selectItemName + ' value="' + value + '"' +
+                        '<input id="checkbox-'+ value +'" class="input_check" type="' + type + '" ' + this.selectItemName + ' value="' + value + '"' +
                         (selected ? ' checked="checked"' : '') +
                         (disabled ? ' disabled="disabled"' : '') +
                         (group.name ? ' data-group="' + group.name + '"' : '') +
                         ' data-option=\'' + JSON.stringify(option) + '\'',
                         '/> ',
+
+                        '<label class="label_check" for="checkbox-'+ value +'"' + (disabled ? ' class="disabled"' : '') + '>',
+                        '<i class="icon"></i> ',
                         text,
                         '</label>',
                         '</li>'
