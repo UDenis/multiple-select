@@ -218,7 +218,12 @@
                     disabled = groupDisabled || option.disabled,
                     type = this.options.single ? 'radio' : 'checkbox',
                     tabIndex = ' tabindex="-1" ',
-                    multiple = this.options.multiple;
+                    multiple = this.options.multiple,
+                    labelClassName = ['label_check'];
+
+                if (disabled) {
+                    labelClassName.push("disabled");
+                }
 
 
                 if ((this.options.blockSeparator > "") && (this.options.blockSeparator == value)) {
@@ -232,17 +237,17 @@
                 } else {
                     html.push(
                         '<li' + clss + style + tabIndex + ' >',
-                        '<input id="checkbox-'+ value +'" class="input_check" type="' + type + '" ' + this.selectItemName + ' value="' + value + '"' +
+                        '<input id="checkbox-' + value + '" class="input_check" type="' + type + '" ' + this.selectItemName + ' value="' + value + '"' +
                         (selected ? ' checked="checked"' : '') +
                         (disabled ? ' disabled="disabled"' : '') +
                         (group.name ? ' data-group="' + group.name + '"' : '') +
                         ' data-option=\'' + JSON.stringify(option) + '\'',
                         '/> ',
 
-                        '<label class="label_check" for="checkbox-'+ value +'"' + (disabled ? ' class="disabled"' : '') + '>',
-                        '<i class="icon"></i> ',
+                        '<label class="' + labelClassName.join(' ') + '" for="checkbox-' + value + '">',
+                        '<i class="icon"></i><span>',
                         text,
-                        '</label>',
+                        '</span></label>',
                         '</li>'
                     );
                 }
@@ -257,7 +262,7 @@
             }
         },
 
-        clearOptions: function(){
+        clearOptions: function () {
             this.$selectItemsContainer.html('');
             this.$selectItems = this.$drop.find('input[' + this.selectItemName + ']:enabled');
             this.$disableItems = this.$drop.find('input[' + this.selectItemName + ']:disabled');
@@ -752,7 +757,7 @@
 
             values = normalizeOption(arrayify(values));
 
-            if (!values.length){
+            if (!values.length) {
                 this.clearSelection(true);
                 return;
             }
