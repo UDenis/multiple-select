@@ -241,7 +241,7 @@
                         (selected ? ' checked="checked"' : '') +
                         (disabled ? ' disabled="disabled"' : '') +
                         (group.name ? ' data-group="' + group.name + '"' : '') +
-                        ' data-option=\'' + JSON.stringify(option) + '\'',
+                        ' data-option=\'' + encodeURI(JSON.stringify(option)) + '\'',
                         '/> ',
 
                         '<label class="' + labelClassName.join(' ') + '" for="checkbox-' + value + '">',
@@ -256,7 +256,7 @@
             if (onlyGenerate) {
                 return html.join('');
             } else {
-                this.$selectItemsContainer.append(html);
+                this.$selectItemsContainer.append(html.join(' '));
                 this.$selectItems = this.$drop.find('input[' + this.selectItemName + ']:enabled');
                 this.$disableItems = this.$drop.find('input[' + this.selectItemName + ']:disabled');
             }
@@ -300,24 +300,25 @@
                 html = [],
                 multiple = this.options.multiple;
 
-            if ($elm.is('option')) {
-                html.push(this.addOption(getOptionParams(i, elm, group, groupDisabled), {
-                    name: group,
-                    disabled: groupDisabled
-                }, true));
-            } else if (!group && $elm.is('optgroup')) {
+            if (!group && $elm.is('optgroup')) {
                 var group = getGroupParams(i, elm, group, groupDisabled);
                 html.push(this.addGroup(group), true);
 
                 $.each($elm.children(), function (i, elm) {
                     html.push(that.optionToHtml(i, elm, group.name, group.disabled));
                 });
+            } else {
+                html.push(this.addOption(getOptionParams(i, elm, group, groupDisabled), {
+                    name: group,
+                    disabled: groupDisabled
+                }, true));
             }
+
             return html.join('');
 
             function getOptionParams(i, elm, group, groupDisabled) {
                 var $elm = $(elm),
-                    value = $elm.val(),
+                    value = $elm.attr('value'),
                     text = that.options.textTemplate($elm),
                     selected = (that.$el.attr('multiple') != undefined) ? $elm.prop('selected') : ($elm.attr('selected') == 'selected'),
                     disabled = $elm.prop('disabled');
@@ -717,7 +718,7 @@
                 var $this = $(this);
                 texts.push($this.parents('li').first().text());
                 values.push($this.val());
-                options.push($this.data('option'));
+                options.push(decodeURI($this.data('option')));
             });
 
             if (type === 'text' && this.$selectGroups.length) {
