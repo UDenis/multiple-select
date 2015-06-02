@@ -217,6 +217,7 @@
                     groupDisabled = group ? group.disabled : false,
                     disabled = groupDisabled || option.disabled,
                     type = this.options.single ? 'radio' : 'checkbox',
+                    inputId = Math.random(),
                     tabIndex = ' tabindex="-1" ',
                     multiple = this.options.multiple,
                     labelClassName = ['label_check'];
@@ -237,14 +238,14 @@
                 } else {
                     html.push(
                         '<li' + clss + style + tabIndex + ' >',
-                        '<input id="checkbox-' + value + '" class="input_check" type="' + type + '" ' + this.selectItemName + ' value="' + value + '"' +
+                        '<input id="checkbox-' + inputId + '" class="input_check" type="' + type + '" ' + this.selectItemName + ' value="' + value + '"' +
                         (selected ? ' checked="checked"' : '') +
                         (disabled ? ' disabled="disabled"' : '') +
                         (group.name ? ' data-group="' + group.name + '"' : '') +
                         ' data-option=\'' + encodeURI(JSON.stringify(option)) + '\'',
                         '/> ',
 
-                        '<label class="' + labelClassName.join(' ') + '" for="checkbox-' + value + '">',
+                        '<label class="' + labelClassName.join(' ') + '" for="checkbox-' + inputId + '">',
                         '<i class="icon"></i><span>',
                         text,
                         '</span></label>',
@@ -718,7 +719,7 @@
                 var $this = $(this);
                 texts.push($this.parents('li').first().text());
                 values.push($this.val());
-                options.push(decodeURI($this.data('option')));
+                options.push(JSON.parse(decodeURI($this.data('option'))));
             });
 
             if (type === 'text' && this.$selectGroups.length) {
