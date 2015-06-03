@@ -72,7 +72,7 @@
             }).join('') + ' />');
 
         this.$choice = $('<button type="button" class="ms-choice" name="' + name + '"><span class="placeholder">' +
-            options.placeholder + '</span><div></div></button>');
+            options.placeholder + '</span></button>');
 
         this.$drop = $('<div class="ms-drop ' + options.position + '"></div>');
 
@@ -590,7 +590,26 @@
             }
             this.options.isOpen = true;
             this.$choice.addClass('open');
+
             this.$drop.show();
+            this.$drop.removeClass('right');
+            this.$drop.removeClass('bottom');
+
+            var dropOffset = this.$drop.offset();
+            var outerWidth = this.$drop.outerWidth();
+            var outerHeight = this.$drop.outerHeight();
+            var windowWidth = $(window).width();
+            var windowHeight = $(window).height();
+
+
+            if (dropOffset.left + outerWidth >= windowWidth) {
+                this.$drop.addClass('right');
+            }
+
+
+            if (dropOffset.top + outerHeight >= windowHeight) {
+                this.$drop.addClass('bottom');
+            }
 
             // fix filter bug: no results show
             this.$selectAll.parent().show();
@@ -641,14 +660,13 @@
         update: function (isInit) {
 
             var selects = this.getSelects(),
-                $span = this.$choice.find('>span');
+                $span = this.$choice.find('>span'),
+                that = this;
 
             if (selects.length === 0) {
                 $span.addClass('placeholder').html(this.options.placeholder);
             } else if (this.options.countSelected && selects.length < this.options.minimumCountSelected) {
-                $span.removeClass('placeholder').html(
-                    (this.options.displayValues ? selects : this.getSelects('text'))
-                        .join(this.options.delimiter));
+                $span.removeClass('placeholder').html(selectedItemHtml());
             } else if (this.options.allSelected &&
                 selects.length === this.$selectItems.length + this.$disableItems.length) {
                 $span.removeClass('placeholder').html(this.options.allSelected);
@@ -662,9 +680,7 @@
                         .replace('%', this.$selectItems.length + this.$disableItems.length));
                 }
             } else {
-                $span.removeClass('placeholder').html(
-                    (this.options.displayValues ? selects : this.getSelects('text'))
-                        .join(this.options.delimiter));
+                $span.removeClass('placeholder').html(selectedItemHtml());
             }
             // set selects to select
             this.$el.val(this.getSelects());
@@ -684,6 +700,12 @@
                     this.changeAfterOpen = true;
                 }
             }
+
+            function selectedItemHtml() {
+                return that.options.displayValues ? selects : that.getSelects('text').map(function (text) {
+                    return this.options.selectedItemTemplate(text);
+                }.bind(that));
+            };
         },
 
         updateSelectAll: function (Init) {
@@ -921,6 +943,10 @@
         },
         textTemplate: function ($elm) {
             return $elm.text();
+        },
+
+        selectedItemTemplate: function (text) {
+            return '<span class="ms-choice-multi-item"><span>' + text + '</span></span>';
         },
 
         onOpen: function () {
