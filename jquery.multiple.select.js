@@ -634,7 +634,7 @@
             this.options.onOpen();
 
             privateEventChanel.trigger(eventName('opened'), this);
-
+            this.$el.trigger(eventName('opened'));
         },
 
         close: function () {
