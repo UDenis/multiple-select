@@ -358,7 +358,7 @@
         onEvent: function ($element, event) {
             var event = eventName(event);
             $element
-                .off(event)
+                //.off(event)
                 .on.apply($element, [event].concat(Array.prototype.slice.call(arguments, 2)));
 
             this.$el.one(eventName('destroy'), function () {
@@ -369,9 +369,14 @@
         events: function () {
             var that = this;
 
+            var noOpen = false
+
             function toggleOpen(e) {
-                e.preventDefault();
-                that[that.options.isOpen ? 'close' : 'open']();
+                if (!noOpen) {
+                    e.preventDefault();
+                    that[that.options.isOpen ? 'close' : 'open']();
+                }
+                noOpen = false;
             }
 
             var label = this.$el.parent().closest('label')[0] || $('label[for=' + this.$el.attr('id') + ']')[0];
@@ -389,6 +394,14 @@
             }
 
             this.onEvent(this.$choice, 'click', toggleOpen);
+
+            this.onEvent(this.$choice, 'keydown', function (e) {
+                if (e.which === KEY.ENTER) {
+                    noOpen = true;
+                    that.options.onTrySubmit && that.options.onTrySubmit()
+                }
+            });
+
             this.onEvent(this.$choice, 'focus', this.options.onFocus);
             this.onEvent(this.$choice, 'blur', this.options.onBlur);
 
@@ -425,6 +438,10 @@
                             that.close();
                             that.$choice.focus();
                         }
+                    case KEY.TAB:
+                        return
+                    default:
+                        that.$searchInput.focus();
                 }
             });
 
@@ -566,7 +583,7 @@
                     highlightedObj.input.prop('checked', !highlightedObj.input.prop('checked'));
                 },
                 next: function (toDown) {
-                    return highlightedItem[toDown ? 'next' : 'prev'](":visible");
+                    return highlightedItem[toDown ? 'nextAll' : 'prevAll'](":visible").first();
                 }
             };
 
