@@ -399,6 +399,8 @@
                 if (e.which === KEY.ENTER) {
                     noOpen = true;
                     that.options.onTrySubmit && that.options.onTrySubmit()
+                } else {
+                    toggleOpen(e);
                 }
             });
 
@@ -422,6 +424,7 @@
                         }
                         break;
                     case KEY.SPACE:
+                    case KEY.ENTER:
                         e.stopPropagation();
                         e.preventDefault();
                         if (that.highlightedItem) {
@@ -432,12 +435,10 @@
                                 that.$choice.focus();
                             }
                         }
-                        break;
-                    case KEY.ENTER:
-                        if (that.options.isOpen) {
-                            that.close();
-                            that.$choice.focus();
+                        if (e.which === KEY.ENTER) {
+                            that.options.onTrySubmit && that.options.onTrySubmit()
                         }
+                        break;
                     case KEY.TAB:
                         return
                     default:
