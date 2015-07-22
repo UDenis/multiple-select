@@ -37,7 +37,8 @@
             var value = opt.id || opt.value || opt.name || opt.text;
             return {
                 id: value,
-                name: opt.text || opt.name || value
+                name: opt.name || opt.text || value,
+                origin: opt
             }
         }
     }
@@ -720,8 +721,8 @@
             }
 
             function selectedItemHtml() {
-                return that.options.displayValues ? selects : that.getSelects('text').map(function (text) {
-                    return this.options.selectedItemTemplate(text);
+                return that.options.displayValues ? selects : that.getSelects('obj').map(function (obj) {
+                    return this.options.selectedItemTemplate(obj);
                 }.bind(that));
             };
         },
@@ -887,6 +888,10 @@
             }
             this.updateOptGroupSelect();
             this.updateSelectAll();
+        },
+
+        config: function(options){
+            $.extend(this.options, options);
         }
     };
 
@@ -902,7 +907,7 @@
                 'focus', 'blur',
                 'refresh', 'close',
                 'destroy', 'addOption',
-                'visible'
+                'visible', 'config'
             ];
 
         this.each(function () {
@@ -963,8 +968,8 @@
             return $elm.text();
         },
 
-        selectedItemTemplate: function (text) {
-            return '<span class="ms-choice-multi-item"><span>' + text + '</span></span>';
+        selectedItemTemplate: function (obj) {
+            return '<span class="ms-choice-multi-item"><span>' + obj.name + '</span></span>';
         },
 
         onOpen: function () {
