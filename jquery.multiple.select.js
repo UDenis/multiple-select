@@ -675,7 +675,7 @@
                 this.$el.trigger(eventName('change'), {items: this.getSelects('obj')});
             }
             this.changeAfterOpen = false;
-            this.$choice.focus();
+            //this.$choice.focus(); // Commented for fix bug after close by click to body (other input). In this case clicked input lost focus
         },
 
         update: function (isInit) {
