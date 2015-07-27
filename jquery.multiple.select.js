@@ -131,7 +131,7 @@
             if (this.options.filter) {
                 html.push(
                     '<div class="ms-search">',
-                    '<input type="text" autocomplete="off" autocorrect="off" autocapitilize="off" spellcheck="false">',
+                    '<input type="text" autocomplete="off" autocorrect="off" autocapitilize="off" spellcheck="false" tabindex="-1">',
                     '</div>'
                 );
             }
@@ -400,6 +400,8 @@
                 if (e.which === KEY.ENTER) {
                     noOpen = true;
                     that.options.onTrySubmit && that.options.onTrySubmit()
+                } else if (e.which == KEY.TAB) {
+                    noOpen = true;
                 } else {
                     toggleOpen(e);
                 }
