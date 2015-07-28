@@ -403,6 +403,7 @@
                 } else if (e.which == KEY.TAB) {
                     noOpen = true;
                 } else {
+                    noOpen = true;
                     toggleOpen(e);
                 }
             });
