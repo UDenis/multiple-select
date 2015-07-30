@@ -403,8 +403,9 @@
                 } else if (e.which == KEY.TAB) {
                     noOpen = true;
                 } else {
-                    noOpen = true;
-                    toggleOpen(e);
+                    if (!that.options.isOpen) {
+                        toggleOpen(e);
+                    }
                 }
             });
 
@@ -425,6 +426,7 @@
                             that.open();
                         } else {
                             that.highlightItem(e.which == KEY.DOWN);
+                            e.preventDefault();
                         }
                         break;
                     case KEY.SPACE:
