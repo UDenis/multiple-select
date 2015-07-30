@@ -38,7 +38,7 @@
             return {
                 id: value,
                 name: opt.name || opt.text || value,
-                origin: opt
+                origin: opt.item
             }
         }
     }
