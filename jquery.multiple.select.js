@@ -413,7 +413,7 @@
             this.onEvent(this.$choice, 'blur', this.options.onBlur);
 
 
-            this.onEvent(this.$parent, 'keyup', function (e) {
+            this.onEvent(this.$parent, 'keydown', function (e) {
                 switch (e.which) {
                     case KEY.ESC: // esc key
                         e.stopPropagation();
