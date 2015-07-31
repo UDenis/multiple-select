@@ -412,22 +412,12 @@
             this.onEvent(this.$choice, 'focus', this.options.onFocus);
             this.onEvent(this.$choice, 'blur', this.options.onBlur);
 
-
-            this.onEvent(this.$parent, 'keydown', function (e) {
+            this.onEvent(this.$parent, 'keyup', function (e) {
                 switch (e.which) {
                     case KEY.ESC: // esc key
                         e.stopPropagation();
                         that.close();
                         that.$choice.focus();
-                        break;
-                    case KEY.DOWN:
-                    case KEY.UP:
-                        if (!that.options.isOpen) {
-                            that.open();
-                        } else {
-                            that.highlightItem(e.which == KEY.DOWN);
-                            e.preventDefault();
-                        }
                         break;
                     case KEY.SPACE:
                     case KEY.ENTER:
@@ -449,6 +439,20 @@
                         return
                     default:
                         that.$searchInput.focus();
+                }
+            })
+
+            this.onEvent(this.$parent, 'keydown', function (e) {
+                switch (e.which) {
+                    case KEY.DOWN:
+                    case KEY.UP:
+                        if (!that.options.isOpen) {
+                            that.open();
+                        } else {
+                            that.highlightItem(e.which == KEY.DOWN);
+                            e.preventDefault();
+                        }
+                        break;
                 }
             });
 
