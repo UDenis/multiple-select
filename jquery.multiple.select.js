@@ -419,22 +419,6 @@
                         that.close();
                         that.$choice.focus();
                         break;
-                    case KEY.SPACE:
-                    case KEY.ENTER:
-                        e.stopPropagation();
-                        e.preventDefault();
-                        if (that.highlightedItem) {
-                            that.highlightedItem.select();
-                            itemSelected(that.highlightedItem.input);
-                            if (that.options.single && that.options.isOpen && !that.options.keepOpen) {
-                                that.close();
-                                that.$choice.focus();
-                            }
-                        }
-                        if (e.which === KEY.ENTER) {
-                            that.options.onTrySubmit && that.options.onTrySubmit()
-                        }
-                        break;
                     case KEY.TAB:
                         return
                     default:
@@ -451,6 +435,22 @@
                         } else {
                             that.highlightItem(e.which == KEY.DOWN);
                             e.preventDefault();
+                        }
+                        break;
+                    case KEY.SPACE:
+                    case KEY.ENTER:
+                        e.stopPropagation();
+                        e.preventDefault();
+                        if (that.highlightedItem) {
+                            that.highlightedItem.select();
+                            itemSelected(that.highlightedItem.input);
+                            if (that.options.single && that.options.isOpen && !that.options.keepOpen) {
+                                that.close();
+                                that.$choice.focus();
+                            }
+                        }
+                        if (e.which === KEY.ENTER) {
+                            that.options.onTrySubmit && that.options.onTrySubmit()
                         }
                         break;
                 }
@@ -899,7 +899,7 @@
             this.updateSelectAll();
         },
 
-        config: function(options){
+        config: function (options) {
             $.extend(this.options, options);
         }
     };
