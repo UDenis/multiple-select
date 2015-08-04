@@ -421,6 +421,7 @@
                         break;
                     case KEY.TAB:
                         return
+
                     default:
                         that.$searchInput.focus();
                 }
@@ -439,6 +440,7 @@
                         break;
                     case KEY.SPACE:
                     case KEY.ENTER:
+                        var isOpen = !that.options.isOpen;
                         e.stopPropagation();
                         e.preventDefault();
                         if (that.highlightedItem) {
@@ -449,7 +451,7 @@
                                 that.$choice.focus();
                             }
                         }
-                        if (e.which === KEY.ENTER) {
+                        if (e.which === KEY.ENTER && isOpen) {
                             that.options.onTrySubmit && that.options.onTrySubmit()
                         }
                         break;
@@ -459,6 +461,9 @@
             this.onEvent(this.$searchInput, 'keydown', function (e) {
                 if (e.keyCode === KEY.TAB && e.shiftKey) { // Ensure shift-tab causes lost focus from filter as with clicking away
                     that.close();
+                }
+                if (e.keyCode === KEY.SPACE){
+                    e.stopPropagation();
                 }
             });
 
